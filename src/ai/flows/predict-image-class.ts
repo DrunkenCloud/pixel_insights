@@ -33,14 +33,14 @@ export async function predictImageClass(input: PredictImageClassInput): Promise<
 const prompt = ai.definePrompt({
   name: 'predictImageClassPrompt',
   input: {schema: PredictImageClassInputSchema},
-  output: {schema: PredictImageClassOutputSchema},
+  output: {schema: PredictImageClassOutputSchema, format: 'json'},
   prompt: `You are an AI image classification model specializing in identifying cats and dogs.
-  Given an image, you will predict whether it is a cat or a dog, and provide a confidence score (0-1).
+  Given an image, you will predict whether it is a "Cat" or a "Dog", and provide a confidence score (0-1).
 
   Analyze the following image:
   {{media url=photoDataUri}}
 
-  Return the prediction and confidence score in JSON format.
+  Return ONLY the JSON object in the specified format.
   `,
 });
 

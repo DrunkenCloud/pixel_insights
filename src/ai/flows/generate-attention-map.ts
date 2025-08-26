@@ -36,17 +36,19 @@ export async function generateAttentionMap(input: GenerateAttentionMapInput): Pr
 const attentionMapPrompt = ai.definePrompt({
   name: 'attentionMapPrompt',
   input: {schema: GenerateAttentionMapInputSchema},
-  output: {schema: GenerateAttentionMapOutputSchema},
+  output: {schema: GenerateAttentionMapOutputSchema, format: 'json'},
   prompt: `You are an AI model that classifies images of cats and dogs and generates an attention map highlighting the areas the AI focuses on to make its decision.
 
   Analyze the image provided as a data URI and:
 
-  1.  Predict whether the image is a cat or a dog. Return the prediction in the 'prediction' field.
+  1.  Predict whether the image is a "Cat" or a "Dog". Return the prediction in the 'prediction' field.
   2.  Provide a confidence score (0-1) for your prediction in the 'confidence' field.
   3.  Generate an attention map as a data URI, highlighting the areas of the image that were most influential in your classification decision. Return the attention map in the 'attentionMapDataUri' field. The attention map should be a visual representation (e.g., a heatmap) overlaid on the original image, clearly showing the areas of focus.
 
   Here is the image:
   {{media url=photoDataUri}}
+  
+  Return ONLY the JSON object.
   `,
 });
 
