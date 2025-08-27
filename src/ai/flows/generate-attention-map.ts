@@ -36,7 +36,7 @@ export async function generateAttentionMap(input: GenerateAttentionMapInput): Pr
 const attentionMapPrompt = ai.definePrompt({
   name: 'attentionMapPrompt',
   input: {schema: GenerateAttentionMapInputSchema},
-  output: {schema: GenerateAttentionMapOutputSchema, format: 'json'},
+  output: {schema: GenerateAttentionMapOutputSchema},
   prompt: `You are an AI model that classifies images of cats and dogs and generates an attention map highlighting the areas the AI focuses on to make its decision.
 
   Analyze the image provided as a data URI and:
@@ -48,7 +48,7 @@ const attentionMapPrompt = ai.definePrompt({
   Here is the image:
   {{media url=photoDataUri}}
   
-  Return ONLY the JSON object. Do not wrap the JSON in markdown backticks.
+  Return ONLY the JSON object. Do not add any commentary or markdown formatting like \`\`\`json.
   `,
 });
 
