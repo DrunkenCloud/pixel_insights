@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
-import { Loader, BrainCircuit, FileJson } from "lucide-react";
+import { Loader, BrainCircuit, UploadCloud, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { getImageEmbedding } from "@/ai/flows/get-image-embedding";
@@ -30,21 +30,28 @@ async function imageUrlToDataUrl(url: string): Promise<string> {
   });
 }
 
+const readFileAsDataURL = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+};
+
 export function HowItWorksPrediction() {
   const [selectedImage, setSelectedImage] = useState<(typeof sampleImages)[0] | null>(null);
+  const [customImageFile, setCustomImageFile] = useState<File | null>(null);
+  const [customImagePreview, setCustomImagePreview] = useState<string | null>(null);
   const [embedding, setEmbedding] = useState<number[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleImageSelect = async (image: (typeof sampleImages)[0]) => {
-    if (isLoading) return;
-    
+  const processImage = async (photoDataUri: string) => {
     setIsLoading(true);
     setEmbedding(null);
-    setSelectedImage(image);
-
     try {
-      const photoDataUri = await imageUrlToDataUrl(image.src);
       const embeddingResult = await getImageEmbedding({ photoDataUri });
       setEmbedding(embeddingResult.embedding);
     } catch (error) {
@@ -54,11 +61,73 @@ export function HowItWorksPrediction() {
         description: "Could not generate an embedding for the image. Please try another one.",
         variant: "destructive",
       });
-      setSelectedImage(null);
     } finally {
       setIsLoading(false);
     }
   };
+  
+  const handleImageSelect = async (image: (typeof sampleImages)[0]) => {
+    if (isLoading) return;
+    
+    resetCustomImage();
+    setSelectedImage(image);
+    const photoDataUri = await imageUrlToDataUrl(image.src);
+    processImage(photoDataUri);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
+  const handleFile = async (file: File) => {
+    if (isLoading || !file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    resetSampleImage();
+    setCustomImageFile(file);
+    const photoDataUri = await readFileAsDataURL(file);
+    setCustomImagePreview(photoDataUri);
+    processImage(photoDataUri);
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (isLoading) return;
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
+  const resetCustomImage = () => {
+    setCustomImageFile(null);
+    setCustomImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  const resetSampleImage = () => {
+    setSelectedImage(null);
+  }
+
+  const clearAll = () => {
+    resetCustomImage();
+    resetSampleImage();
+    setEmbedding(null);
+  }
 
   return (
     <Card className="w-full max-w-6xl mx-auto shadow-lg">
@@ -67,30 +136,67 @@ export function HowItWorksPrediction() {
         <CardDescription>See how an AI model converts an image into a list of numbers—an "embedding"—that represents its features.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">1. Select an image to process</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {sampleImages.map((image) => (
-              <button
-                key={image.id}
-                className={cn(
-                  "relative aspect-video rounded-lg overflow-hidden border-2 transition-all",
-                  selectedImage?.id === image.id ? "border-primary ring-2 ring-primary ring-offset-2" : "border-transparent hover:border-primary/50",
-                  isLoading && selectedImage?.id !== image.id && "cursor-not-allowed opacity-50"
+        <div className="grid md:grid-cols-2 gap-8 items-start">
+            <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-semibold">1. Upload an image</h3>
+                {customImagePreview ? (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden border shadow-sm">
+                        <Image src={customImagePreview} alt="Uploaded preview" fill className="object-cover" />
+                         <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10" onClick={clearAll} disabled={isLoading}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                ) : (
+                    <div
+                        className={cn(
+                            "relative w-full aspect-video border-2 border-dashed border-muted-foreground/50 rounded-lg flex flex-col justify-center items-center text-center p-8 transition-colors",
+                            !isLoading && "cursor-pointer hover:border-primary hover:bg-accent/20",
+                            isLoading && "cursor-not-allowed opacity-50"
+                        )}
+                        onClick={() => !isLoading && fileInputRef.current?.click()}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                    >
+                        <UploadCloud className="w-12 h-12 text-muted-foreground" />
+                        <p className="mt-4 text-lg font-semibold">Click or drag & drop to upload</p>
+                        <p className="text-sm text-muted-foreground">PNG, JPG, or WEBP</p>
+                        <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/png, image/jpeg, image/webp"
+                        className="hidden"
+                        disabled={isLoading}
+                        />
+                    </div>
                 )}
-                onClick={() => handleImageSelect(image)}
-                disabled={isLoading && selectedImage?.id !== image.id}
-              >
-                <Image src={image.src} alt={image.alt} fill className="object-cover" data-ai-hint={image.dataAiHint}/>
-                {selectedImage?.id === image.id && isLoading && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                    <Loader className="w-8 h-8 animate-spin text-primary"/>
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
+            </div>
+            <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-semibold">... or select a sample image</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    {sampleImages.map((image) => (
+                    <button
+                        key={image.id}
+                        className={cn(
+                        "relative aspect-[3/2] rounded-lg overflow-hidden border-2 transition-all",
+                        selectedImage?.id === image.id ? "border-primary ring-2 ring-primary ring-offset-2" : "border-transparent hover:border-primary/50",
+                        isLoading && "cursor-not-allowed opacity-50"
+                        )}
+                        onClick={() => handleImageSelect(image)}
+                        disabled={isLoading}
+                    >
+                        <Image src={image.src} alt={image.alt} fill className="object-cover" data-ai-hint={image.dataAiHint}/>
+                        {(selectedImage?.id === image.id || customImageFile) && isLoading && (
+                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                            <Loader className="w-8 h-8 animate-spin text-primary"/>
+                        </div>
+                        )}
+                    </button>
+                    ))}
+                </div>
+            </div>
         </div>
+
 
         <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -104,7 +210,7 @@ export function HowItWorksPrediction() {
                     </div>
                 )}
                 {!isLoading && !embedding && (
-                     <p className="text-center text-muted-foreground">Select an image to see its embedding vector.</p>
+                     <p className="text-center text-muted-foreground">Select or upload an image to see its embedding vector.</p>
                 )}
                 {embedding && (
                     <div className="w-full h-48 overflow-y-auto bg-background/50 p-4 rounded-md">
