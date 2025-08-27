@@ -8,9 +8,26 @@
  * - GetImageEmbeddingOutput - The return type for the getImageEmbedding function.
  */
 
-import { generateEmbedding } from '@/ai/genkit';
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+
+async function generateEmbedding(photoDataUri: string): Promise<number[]> {
+  const { embedding } = await ai.embed({
+    model: 'googleai/embedding-004',
+    content: {
+      parts: [
+        {
+          media: {
+            url: photoDataUri,
+          },
+        },
+      ],
+    }
+  });
+
+  return embedding;
+}
+
 
 const GetImageEmbeddingInputSchema = z.object({
   photoDataUri: z
