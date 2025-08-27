@@ -48,7 +48,7 @@ const attentionMapPrompt = ai.definePrompt({
   Here is the image:
   {{media url=photoDataUri}}
   
-  Return ONLY the JSON object.
+  Return ONLY the JSON object. Do not wrap the JSON in markdown backticks.
   `,
 });
 

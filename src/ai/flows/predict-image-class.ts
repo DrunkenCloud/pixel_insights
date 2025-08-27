@@ -40,7 +40,7 @@ const prompt = ai.definePrompt({
   Analyze the following image:
   {{media url=photoDataUri}}
 
-  Return ONLY the JSON object in the specified format.
+  Return ONLY the JSON object. Do not wrap the JSON in markdown backticks.
   `,
 });
 
