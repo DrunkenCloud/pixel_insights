@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -14,7 +15,7 @@ const GetImageEmbeddingInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      "A photo, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
 });
 export type GetImageEmbeddingInput = z.infer<typeof GetImageEmbeddingInputSchema>;
@@ -31,7 +32,7 @@ export async function getImageEmbedding(input: GetImageEmbeddingInput): Promise<
     throw new Error('GEMINI_API_KEY is not set in the environment.');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/embedding-004:embedContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/embedding-004:batchEmbedContents?key=${apiKey}`;
 
   // Extract mimeType and base64 data from data URI
   const matches = input.photoDataUri.match(/^data:(.+);base64,(.*)$/);
@@ -42,17 +43,21 @@ export async function getImageEmbedding(input: GetImageEmbeddingInput): Promise<
   const base64Data = matches[2];
 
   const requestBody = {
-    model: "models/embedding-004",
-    content: {
-      parts: [
-        {
-          blob: {
-            mimeType: mimeType,
-            data: base64Data,
-          },
+    requests: [
+      {
+        model: "models/embedding-004",
+        content: {
+          parts: [
+            {
+              blob: {
+                mimeType: mimeType,
+                data: base64Data,
+              },
+            },
+          ],
         },
-      ],
-    },
+      }
+    ]
   };
 
   try {
@@ -71,7 +76,8 @@ export async function getImageEmbedding(input: GetImageEmbeddingInput): Promise<
     }
 
     const data = await response.json();
-    return { embedding: data.embedding.values };
+    // The response is an array of embeddings, we take the first one.
+    return { embedding: data.embeddings[0].values };
   } catch (error) {
     console.error('Failed to generate embedding:', error);
     throw new Error('Failed to generate embedding.');
