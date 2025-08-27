@@ -9,10 +9,10 @@ import { generateAttentionMap, type GenerateAttentionMapOutput } from "@/ai/flow
 import { cn } from "@/lib/utils";
 
 const sampleImages = [
-  { id: 'cat1', src: 'https://picsum.photos/id/219/800/600', alt: 'A fluffy cat', dataAiHint: 'cat' },
-  { id: 'dog1', src: 'https://picsum.photos/id/237/800/600', alt: 'A black puppy', dataAiHint: 'dog' },
-  { id: 'cat2', src: 'https://picsum.photos/id/1074/800/600', alt: 'A cat yawning', dataAiHint: 'cat' },
-  { id: 'dog2', src: 'https://picsum.photos/id/568/800/600', alt: 'A dog in a field', dataAiHint: 'dog' },
+  { id: 'cat1', src: 'https://picsum.photos/id/219/200/300', alt: 'A fluffy cat', dataAiHint: 'cat' },
+  { id: 'dog1', src: 'https://picsum.photos/id/237/200/300', alt: 'A black puppy', dataAiHint: 'dog' },
+  { id: 'cat2', src: 'https://picsum.photos/id/1074/200/300', alt: 'A cat yawning', dataAiHint: 'cat' },
+  { id: 'dog2', src: 'https://picsum.photos/id/568/200/300', alt: 'A dog in a field', dataAiHint: 'dog' },
 ];
 
 async function imageUrlToDataUrl(url: string): Promise<string> {
