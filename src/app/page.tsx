@@ -2,7 +2,6 @@ import { Cpu } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LiveDemo } from "@/components/live-demo";
 import { HowItWorksTraining } from "@/components/how-it-works-training";
-import { HowItWorksPrediction } from "@/components/how-it-works-prediction";
 
 export default function Home() {
   return (
@@ -18,10 +17,9 @@ export default function Home() {
       </header>
       <main className="flex-1 container mx-auto py-8 px-4">
         <Tabs defaultValue="demo" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10">
             <TabsTrigger value="demo" className="py-2 sm:py-1.5">Live Demo</TabsTrigger>
             <TabsTrigger value="training" className="py-2 sm:py-1.5">How It Works: Training</TabsTrigger>
-            <TabsTrigger value="prediction" className="py-2 sm:py-1.5">How It Works: Embeddings</TabsTrigger>
           </TabsList>
           
           <TabsContent value="demo" className="mt-6">
@@ -30,10 +28,6 @@ export default function Home() {
           
           <TabsContent value="training" className="mt-6">
             <HowItWorksTraining />
-          </TabsContent>
-
-          <TabsContent value="prediction" className="mt-6">
-            <HowItWorksPrediction />
           </TabsContent>
         </Tabs>
       </main>
